@@ -1,0 +1,40 @@
+name: Test
+
+on: workflow_call
+
+env:
+  CARGO_TERM_COLOR: always
+  CACHE_PATHS: |
+    ~/.cargo/bin/
+    ~/.cargo/registry/index/
+    ~/.cargo/registry/cache/
+    ~/.cargo/git/db/
+    target/
+
+jobs:
+  test-linux:
+    name: Test Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: test-${{ runner.OS }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test
+        run: cargo test
+  test-windows:
+    name: Test Windows
+    runs-on: windows-latest
+    steps:
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: test-${{ runner.OS }}-${{ hashFiles('**/Cargo.lock') }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test
+        run: cargo test
