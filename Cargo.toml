@@ -6,6 +6,6 @@ edition = "2021"
 description = "This crate provides Kotlin-inspired scope functions for use in almost any situation."
 readme = "README.md"
 repository = "https://github.com/apsoyka/scope-functions"
-license-file = "LICENSE"
+license = "MIT"
 keywords = ["kotlin", "scope", "function"]
 categories = ["rust-patterns"]
