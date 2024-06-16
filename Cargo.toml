@@ -1,0 +1,11 @@
+[package]
+name = "scope-functions"
+version = "1.0.0"
+authors = ["Anastasiya Polina Soyka <apsoyka@protonmail.com>"]
+edition = "2021"
+description = "This crate provides Kotlin-inspired scope functions for use in almost any situation."
+readme = "README.md"
+repository = "https://github.com/apsoyka/scope-functions"
+license-file = "LICENSE"
+keywords = ["kotlin", "scope", "function"]
+categories = ["rust-patterns"]
