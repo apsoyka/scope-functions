@@ -1,117 +1,45 @@
 //! This crate provides Kotlin-inspired scope functions for use in almost any situation.
 
-/// Defines several scope functions that perform additional actions on `Self`.
-pub trait Apply: Sized {
-    /// Calls the specified `closure` with `Self` as an argument and returns `Self`.
-    fn apply(self, closure: fn(&Self) -> ()) -> Self;
+mod apply;
+mod run;
 
-    /// Calls the specified `closure` with mutable `Self` as an argument and returns `Self`.
-    fn apply_mut(self, closure: fn(&mut Self) -> ()) -> Self;
-
-    /// Calls the specified `closure` with `Self` as an argument and returns a `Result`.
-    fn try_apply<E>(self, closure: fn(&Self) -> Result<(), E>) -> Result<Self, E>;
-
-    /// Calls the specified `closure` with mutable `Self` as an argument and returns a `Result`.
-    fn try_apply_mut<E>(self, closure: fn(&mut Self) -> Result<(), E>) -> Result<Self, E>;
-}
-
-/// Defines several scope functions which take `Self` as an argument and return a value.
-pub trait Run: Sized {
-    /// Calls the specified `closure` with `Self` as an argument and returns its result.
-    fn run<T>(self, closure: fn(&Self) -> T) -> T;
-
-    /// Calls the specified `closure` with mutable `Self` as an argument and returns its result.
-    fn run_mut<T>(self, closure: fn(&mut Self) -> T) -> T;
-
-    /// Calls the specified `closure` with `Self` as an argument and returns a `Result`.
-    fn try_run<T, E>(self, closure: fn(&Self) -> Result<T, E>) -> Result<T, E>;
-
-    /// Calls the specified `closure` with mutable `Self` as an argument and returns a `Result`.
-    fn try_run_mut<T, E>(self, closure: fn(&mut Self) -> Result<T, E>) -> Result<T, E>;
-}
-
-impl<A: Sized> Apply for A {
-    #[inline(always)]
-    fn apply(self, closure: fn(&Self) -> ()) -> A {
-        closure(&self);
-        self
-    }
-
-    #[inline(always)]
-    fn apply_mut(mut self, closure: fn(&mut Self) -> ()) -> A {
-        closure(&mut self);
-        self
-    }
-
-    #[inline(always)]
-    fn try_apply<E>(self, closure: fn(&Self) -> Result<(), E>) -> Result<Self, E> {
-        closure(&self)?;
-        Ok(self)
-    }
-
-    #[inline(always)]
-    fn try_apply_mut<E>(mut self, closure: fn(&mut Self) -> Result<(), E>) -> Result<Self, E> {
-        closure(&mut self)?;
-        Ok(self)
-    }
-}
-
-impl<A: Sized> Run for A {
-    #[inline(always)]
-    fn run<T>(self, closure: fn(&Self) -> T) -> T {
-        closure(&self)
-    }
-
-    #[inline(always)]
-    fn run_mut<T>(mut self, closure: fn(&mut Self) -> T) -> T {
-        closure(&mut self)
-    }
-
-    #[inline(always)]
-    fn try_run<T, E>(self, closure: fn(&Self) -> Result<T, E>) -> Result<T, E> {
-        closure(&self)
-    }
-
-    #[inline(always)]
-    fn try_run_mut<T, E>(mut self, closure: fn(&mut Self) -> Result<T, E>) -> Result<T, E> {
-        closure(&mut self)
-    }
-}
+pub use apply::Apply;
+pub use run::Run;
 
 /// Calls the specified `closure` and returns its result.
 #[inline(always)]
-pub fn run<T>(closure: fn() -> T) -> T {
+pub fn run<T>(closure: impl FnOnce() -> T) -> T {
     closure()
 }
 
 /// Calls the specified `closure` and returns a `Result`.
 #[inline(always)]
-pub fn try_run<T, E>(closure: fn() -> Result<T, E>) -> Result<T, E> {
+pub fn try_run<T, E>(closure: impl FnOnce() -> Result<T, E>) -> Result<T, E> {
     closure()
 }
 
 /// Calls the specified `closure` with the given `receiver` and returns its result.
 #[inline(always)]
-pub fn with<R, T>(receiver: R, closure: fn(R) -> T) -> T {
+pub fn with<R, T>(receiver: &R, closure: impl FnOnce(&R) -> T) -> T {
     closure(receiver)
 }
 
 /// Calls the specified `closure` with the given mutable `receiver` and returns its result.
 #[inline(always)]
-pub fn with_mut<R, T>(mut receiver: R, closure: fn(&mut R) -> T) -> T {
-    closure(&mut receiver)
+pub fn with_mut<R, T>(receiver: &mut R, closure: impl FnOnce(&mut R) -> T) -> T {
+    closure(receiver)
 }
 
 /// Calls the specified `closure` with the given `receiver` and returns a `Result`.
 #[inline(always)]
-pub fn try_with<R, T, E>(receiver: R, closure: fn(R) -> Result<T, E>) -> Result<T, E> {
+pub fn try_with<R, T, E>(receiver: &R, closure: impl FnOnce(&R) -> Result<T, E>) -> Result<T, E> {
     closure(receiver)
 }
 
 /// Calls the specified `closure` with the given mutable `receiver` and returns a `Result`.
 #[inline(always)]
-pub fn try_with_mut<R, T, E>(mut receiver: R, closure: fn(&mut R) -> Result<T, E>) -> Result<T, E> {
-    closure(&mut receiver)
+pub fn try_with_mut<R, T, E>(receiver: &mut R, closure: impl FnOnce(&mut R) -> Result<T, E>) -> Result<T, E> {
+    closure(receiver)
 }
 
 #[cfg(test)]
@@ -120,25 +48,56 @@ mod tests {
 
     #[test]
     fn run_works() {
-        let x = run(|| 42);
-
-        assert_eq!(x, 42);
-    }
-
-    #[test]
-    fn run_with_self_works() {
         let x = 21;
-        let y = x.run(|x| x + 21);
+        let y = run(|| x + 21);
 
         assert_eq!(y, 42);
     }
 
     #[test]
     fn try_run_works() {
-        let x: Result<i32, ()> = run(|| Ok(42));
+        let x: Result<i32, ()> = try_run(|| Ok(42));
         assert_eq!(x, Ok(42));
 
-        let y: Result<(), &str> = run(|| Err("error"));
+        let y: Result<(), &str> = try_run(|| Err("error"));
+        assert_eq!(y, Err("error"));
+    }
+
+    #[test]
+    fn with_works() {
+        let x = with(&14, |x| x + 28);
+
+        assert_eq!(x, 42);
+    }
+
+    #[test]
+    fn with_mut_works() {
+        let x = with_mut(&mut 28, |x| {
+            *x += 14;
+            *x
+        });
+
+        assert_eq!(x, 42);
+    }
+
+    #[test]
+    fn try_with_works() {
+        let x: Result<i32, ()> = try_with(&42, |x| Ok(*x));
+        assert_eq!(x, Ok(42));
+
+        let y: Result<(), &str> = try_with(&0, |_| Err("error"));
+        assert_eq!(y, Err("error"));
+    }
+
+    #[test]
+    fn try_with_mut_works() {
+        let x: Result<i32, ()> = try_with_mut(&mut 28, |x| {
+            *x += 14;
+            Ok(*x)
+        });
+        assert_eq!(x, Ok(42));
+
+        let y: Result<(), &str> = try_with_mut(&mut 0, |_| Err("error"));
         assert_eq!(y, Err("error"));
     }
 }
