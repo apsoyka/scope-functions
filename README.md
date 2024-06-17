@@ -9,7 +9,7 @@ For example, a scope function may be used to perform an extra operation on an ob
 # Function Selection
 
 Function | Return Value
-:-- | :--
+:-: | :--
 `run` | Closure Result
 `with` | Closure Result
 `apply` | Context Object

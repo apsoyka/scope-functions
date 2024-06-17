@@ -1,6 +1,6 @@
 [package]
 name = "scope-functions"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Anastasiya Polina Soyka <apsoyka@protonmail.com>"]
 edition = "2021"
 description = "This crate provides Kotlin-inspired scope functions for use in almost any situation."
